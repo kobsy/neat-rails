@@ -74,7 +74,6 @@ class window.Neat.ModelEditor extends Backbone.View
   save: (e)->
     e?.preventDefault()
     newAttributes = @attributesFromForm(@$el)
-    newAttributes = @processAttributes(newAttributes)
     @debug 'saving: ', newAttributes
     attributes =  @model.changedAttributes(newAttributes)
 
@@ -95,10 +94,6 @@ class window.Neat.ModelEditor extends Backbone.View
 
   okToSave: (attributes)->
     true
-
-  processAttributes: (attributes) ->
-    # Can be overridden by subclasses
-    attributes
 
   attributesFromForm: ($el)->
     attrs = {}
