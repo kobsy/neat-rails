@@ -94,8 +94,7 @@ class window.Neat.ModelEditor extends Backbone.View
   okToSave: (attributes)->
     true
 
-  attributesFromForm: ($el, options)->
-    options = options ? {}
+  attributesFromForm: ($el) ->
     attrs = {}
     $el.find('input, select, textarea').each ->
       elem = $(@)
@@ -118,17 +117,6 @@ class window.Neat.ModelEditor extends Backbone.View
       context = attrs
       for part in parts
         context = context[part] or (context[part] = {})
-
-      if value is null and options.stringifyNullValues
-        value = ''
-
-      # Normally, checkboxes serialize to a value if they are
-      # checked and do not if they are not checked. Alernately,
-      # we can serialize the boolean indicating the checkbox's
-      # checked-state as its value rather than its value.
-      if elemType == 'checkbox' && options.checkboxesAreBoolean
-        value = elem.prop('checked')
-        elemType = null
 
       if (elemType == 'checkbox' || elemType == 'radio') && !elem.prop('checked')
         return true
