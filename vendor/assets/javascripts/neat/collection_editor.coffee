@@ -19,6 +19,7 @@ class window.Neat.CollectionEditor extends Backbone.View
   sortAliases: {}
   templateOptions: {}
   pageSize: 30
+  infiniteScroll: false
   useKeyboardToChangeRows: true
   cancelOnEsc: true
   saveOnEnter: true
@@ -88,10 +89,12 @@ class window.Neat.CollectionEditor extends Backbone.View
     @templateOptions = {}
 
   repaginate: ->
-    @rerenderPage(1)
+    pageNumber = if @infiniteScroll then @paginator.getCurrentPage() else 1
+    @rerenderPage(pageNumber)
 
   rerenderPage: (page)->
     page = @paginator.getCurrentPage() unless _.isNumber(page)
+    page = parseInt(Math.ceil(@collection.length / @pageSize)) if @infiniteScroll
     if @sortedBy
       sortField = @sortField(@sortedBy)
       items = @collection.sortBy (model)->
@@ -123,14 +126,16 @@ class window.Neat.CollectionEditor extends Backbone.View
     @
 
   renderPage: ->
+    oldScroll = $(window).scrollTop()
     alt = false
     $ul = $(@el).find("##{@resource}").empty() # e.g. $('#calendars')
     @views = []
     self = @
 
-    $(@el).find('.extended-pagination').html(@paginator.renderExtendedPagination())
+    $(@el).find('.extended-pagination').html(@paginator.renderExtendedPagination()) unless @infiniteScroll
 
-    for model in @paginator.getCurrentSet()
+    renderSet = if @infiniteScroll then @paginator.getCurrentSetCumulative() else @paginator.getCurrentSet()
+    for model in renderSet
       view = @constructModelView # e.g. window.CalendarView
         resource: @resource
         viewPath: @viewPath
@@ -144,6 +149,7 @@ class window.Neat.CollectionEditor extends Backbone.View
       $el = $(view.render().el)
       $el.toggleClass 'alt', !(alt = !alt)
       $ul.append $el
+    $(window).scrollTop(oldScroll)
     @
 
   constructModelView: (options) ->
@@ -160,7 +166,12 @@ class window.Neat.CollectionEditor extends Backbone.View
   afterEdit: (view)->
     @viewInEdit = null if @viewInEdit == view
 
-
+  loadNextPage: ->
+    @collection.fetch
+      remove: false
+      data:
+        page: @paginator.getCurrentPage() + 1
+        page_size: @pageSize
 
   sort: (e)->
     e.preventDefault()
@@ -231,10 +242,10 @@ class window.Neat.CollectionEditor extends Backbone.View
     @render()
 
   __add: ->
-    @rerenderPage()
+    @delayedRerender.trigger()
 
   __remove: ->
-    @rerenderPage()
+    @delayedRerender.trigger()
 
 
 
