@@ -8,6 +8,7 @@ class window.Neat.Renderer.Basic
     @collection.bind 'change',  @_modelHasBeenChanged, @
     @views = []
     @observer = new Observer()
+    @renderTimeout = null
 
   renderTo: (@$ul) ->
     @views = []
@@ -21,8 +22,12 @@ class window.Neat.Renderer.Basic
 
   _render: ->
     # Doesn't need to render anything else like pagination controls on the view
-    # Just needs the @$ul that it should render views to
-    @_renderVisibleModels()
+    # Just needs the @$ul that it should render views to.
+    # Debounce render calls, esp. when adding lots of models very quickly.
+    clearTimeout(@renderTimeout)
+    @renderTimeout = setTimeout =>
+      @_renderVisibleModels()
+    , 100
 
   _renderVisibleModels: ->
     visibleModels = @_visibleModels()
